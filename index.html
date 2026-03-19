@@ -184,10 +184,10 @@
     </style>
 </head>
 <body>
-    <button class="cat-wrapper loading" id="cat-wrapper" type="button" title="Click for new cat" aria-label="Generate a random cat">
+    <div class="cat-wrapper loading" id="cat-wrapper" role="button" tabindex="0" title="Click for new cat" aria-label="Generate a random cat">
         <div class="cat-placeholder" aria-hidden="true"></div>
         <img id="cat" class="cat" alt="Random cat image" />
-    </button>
+    </div>
 
     <div class="seo-copy" role="note" aria-label="About PabloCat">
         <h1>PabloCat</h1>
@@ -386,6 +386,14 @@
 
         catWrapper.addEventListener('click', () => {
             handleCatActivate();
+        });
+
+        catWrapper.addEventListener('keydown', (e) => {
+            // Keep keyboard accessibility now that the wrapper is no longer a native <button>.
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleCatActivate();
+            }
         });
 
         // Initial load, then start auto-refresh (new cat every 20s)
