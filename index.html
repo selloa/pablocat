@@ -157,6 +157,18 @@
             border-radius: 14px;
             color: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(6px);
+            opacity: 1;
+            transition: opacity 0.9s ease, transform 0.9s ease;
+        }
+        .seo-copy.fading {
+            opacity: 0;
+            transform: translateX(-50%) translateY(8px);
+            pointer-events: none;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .seo-copy {
+                transition: none;
+            }
         }
         .seo-copy h1 {
             font-size: 16px;
@@ -185,6 +197,32 @@
     <script>
         const catWrapper = document.getElementById('cat-wrapper');
         const catImg = document.getElementById('cat');
+        const seoCopy = document.querySelector('.seo-copy');
+        let initSeoFadeTimeoutId = null;
+        let seoCopyHasFaded = false;
+
+        function fadeOutSeoCopy(_reason) {
+            if (seoCopyHasFaded) return;
+            seoCopyHasFaded = true;
+            if (!seoCopy) return;
+
+            if (initSeoFadeTimeoutId) {
+                clearTimeout(initSeoFadeTimeoutId);
+                initSeoFadeTimeoutId = null;
+            }
+
+            const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (prefersReducedMotion) {
+                seoCopy.style.display = 'none';
+                return;
+            }
+
+            seoCopy.classList.add('fading');
+            // Hide after the CSS transition completes so it doesn't take layout space.
+            setTimeout(() => {
+                seoCopy.style.display = 'none';
+            }, 900);
+        }
 
         // GoatCounter snippet is `async`, so it may not be ready at first user interaction.
         // Queue events briefly to avoid dropping early taps/page loads.
@@ -250,11 +288,15 @@
             catWrapper.classList.remove('loading');
 
             const loadedToken = catImg.dataset.loadToken;
-            if (pendingLoad && String(pendingLoad.token) === loadedToken && pendingLoad.source === 'tap') {
+
+            const matchedPendingLoad = (pendingLoad && String(pendingLoad.token) === loadedToken) ? pendingLoad : null;
+
+            if (matchedPendingLoad && matchedPendingLoad.source === 'tap') {
                 trackGoatEvent('cat-image-loaded', 'Cat image loaded');
                 trackGoatEvent('cat-tap-success', 'Tap -> loaded');
             }
-            if (pendingLoad && String(pendingLoad.token) === loadedToken) {
+
+            if (matchedPendingLoad) {
                 pendingLoad = null;
             }
         }
@@ -348,6 +390,8 @@
 
         // Initial load, then start auto-refresh (new cat every 20s)
         loadNewCat('init');
+        // Show message briefly on load, then fade it out.
+        initSeoFadeTimeoutId = setTimeout(() => fadeOutSeoCopy('timeout'), 6500);
         startAutoRefresh();
 
         // Register a service worker so browsers can install as a PWA.
