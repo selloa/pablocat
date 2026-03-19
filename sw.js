@@ -1,11 +1,18 @@
 const CACHE_NAME = 'cat-pwa-v1';
 
+// GitHub Pages often hosts the site under a sub-path (e.g. /pablocat/).
+// Derive the app base from the SW location so cached URLs resolve correctly.
+const BASE_PATH = new URL('./', self.location.href).pathname; // e.g. /pablocat/
+const BASE_URL = `${self.location.origin}${BASE_PATH}`; // e.g. https://selloa.github.io/pablocat/
+
 // App shell resources to cache for offline / faster loads.
 const APP_SHELL = [
-  '/index.html',
-  '/manifest.webmanifest',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg',
+  `${BASE_URL}index.html`,
+  `${BASE_URL}manifest.webmanifest`,
+  `${BASE_URL}icons/icons8-cat-ios-17-outlined-16.png`,
+  `${BASE_URL}icons/icons8-cat-ios-17-outlined-32.png`,
+  `${BASE_URL}icons/icons8-cat-ios-17-outlined-96.png`,
+  `${BASE_URL}og-preview.png`,
 ];
 
 self.addEventListener('install', (event) => {
@@ -36,7 +43,7 @@ self.addEventListener('fetch', (event) => {
   // For cross-origin requests (like the cat API), do a network-first approach.
   if (url.origin !== self.location.origin) {
     event.respondWith(
-      fetch(req).catch(() => caches.match('/index.html'))
+      fetch(req).catch(() => caches.match(`${BASE_URL}index.html`))
     );
     return;
   }
@@ -59,7 +66,7 @@ self.addEventListener('fetch', (event) => {
         return fresh;
       } catch (e) {
         // Fall back to cached app shell (keeps install/offline UX reasonable).
-        return caches.match('/index.html');
+        return caches.match(`${BASE_URL}index.html`);
       }
     })()
   );

@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#1a1a1a">
+    <meta name="color-scheme" content="dark">
+    <meta name="description" content="Infinite cat generator: click for a new random cat image. A tiny PWA for cat lovers.">
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+    <link rel="canonical" href="https://selloa.github.io/pablocat/">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="PabloCat">
+
+    <link rel="preconnect" href="https://api.thecatapi.com" crossorigin>
 
     <!-- PWA install metadata -->
     <link rel="manifest" href="./manifest.webmanifest">
@@ -18,8 +24,10 @@
     <!-- Open Graph / WhatsApp & Facebook link preview (og:image must be absolute https URL) -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://selloa.github.io/pablocat/">
-    <meta property="og:title" content="PabloCat">
-    <meta property="og:description" content="Random cats on tap — a tiny PWA.">
+    <meta property="og:site_name" content="PabloCat">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:title" content="PabloCat - Random Cat Generator">
+    <meta property="og:description" content="Infinite cat generator: click for a new random cat image. A tiny PWA for cat lovers.">
     <meta property="og:image" content="https://selloa.github.io/pablocat/og-preview.png">
     <meta property="og:image:secure_url" content="https://selloa.github.io/pablocat/og-preview.png">
     <meta property="og:image:alt" content="PabloCat preview image">
@@ -27,11 +35,31 @@
     <meta property="og:image:width" content="1376">
     <meta property="og:image:height" content="768">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="PabloCat">
-    <meta name="twitter:description" content="Random cats on tap — a tiny PWA.">
+    <meta name="twitter:domain" content="selloa.github.io">
+    <meta name="twitter:title" content="PabloCat - Random Cat Generator">
+    <meta name="twitter:description" content="Infinite cat generator: click for a new random cat image. A tiny PWA for cat lovers.">
     <meta name="twitter:image" content="https://selloa.github.io/pablocat/og-preview.png">
+    <meta name="twitter:image:alt" content="PabloCat preview image">
 
-    <title>PabloCat</title>
+    <title>PabloCat - Random Cat Generator</title>
+    <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "PabloCat - Random Cat Generator",
+          "url": "https://selloa.github.io/pablocat/",
+          "description": "Infinite cat generator: click for a new random cat image. A tiny PWA for cat lovers.",
+          "applicationCategory": "Entertainment",
+          "operatingSystem": "Any",
+          "browserRequirements": "Requires JavaScript enabled",
+          "featureList": [
+            "Click to generate a random cat image",
+            "Runs as a lightweight PWA"
+          ]
+        }
+    </script>
+    <script data-goatcounter="https://selloa.goatcounter.com/count"
+            async src="//gc.zgo.at/count.js"></script>
     <style>
         * {
             margin: 0;
@@ -50,6 +78,8 @@
         }
         body {
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            position: relative;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
         }
         .cat-wrapper {
             position: relative;
@@ -113,45 +143,152 @@
                 box-shadow: 0 8px 24px rgba(90, 107, 90, 0.3);
             }
         }
+        .seo-copy {
+            position: absolute;
+            left: 50%;
+            bottom: calc(env(safe-area-inset-bottom) + 14px);
+            transform: translateX(-50%);
+            width: min(92vw, 560px);
+            text-align: center;
+            padding: 10px 14px;
+            background: rgba(26, 26, 26, 0.65);
+            border: 1px solid rgba(175, 255, 175, 0.14);
+            border-radius: 14px;
+            color: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(6px);
+        }
+        .seo-copy h1 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+        .seo-copy p {
+            margin-top: 4px;
+            font-size: 13px;
+            line-height: 1.35;
+            opacity: 0.95;
+        }
     </style>
 </head>
 <body>
-    <button class="cat-wrapper loading" id="cat-wrapper" type="button" title="Click for new cat">
+    <button class="cat-wrapper loading" id="cat-wrapper" type="button" title="Click for new cat" aria-label="Generate a random cat">
         <div class="cat-placeholder" aria-hidden="true"></div>
-        <img id="cat" class="cat" alt="Cat" />
+        <img id="cat" class="cat" alt="Random cat image" />
     </button>
+
+    <div class="seo-copy" role="note" aria-label="About PabloCat">
+        <h1>PabloCat</h1>
+        <p>Infinite cat generator: click for a new random cat image.</p>
+    </div>
 
     <script>
         const catWrapper = document.getElementById('cat-wrapper');
         const catImg = document.getElementById('cat');
 
+        // GoatCounter snippet is `async`, so it may not be ready at first user interaction.
+        // Queue events briefly to avoid dropping early taps/page loads.
+        const goatEventQueue = [];
+        let goatQueueFlushTimer = null;
+
+        function flushGoatEventQueue() {
+            if (!window.goatcounter || typeof window.goatcounter.count !== 'function') return;
+            while (goatEventQueue.length > 0) {
+                const payload = goatEventQueue.shift();
+                window.goatcounter.count(payload);
+            }
+            if (goatQueueFlushTimer) {
+                clearInterval(goatQueueFlushTimer);
+                goatQueueFlushTimer = null;
+            }
+        }
+
+        function trackGoatEvent(path, title) {
+            try {
+                const payload = { path: path, title: title ?? path, event: true };
+                if (window.goatcounter && typeof window.goatcounter.count === 'function') {
+                    window.goatcounter.count(payload);
+                    return;
+                }
+
+                goatEventQueue.push(payload);
+
+                // Start a short-lived flusher so events get sent as soon as GoatCounter is ready.
+                if (!goatQueueFlushTimer) {
+                    goatQueueFlushTimer = setInterval(flushGoatEventQueue, 200);
+                    setTimeout(() => {
+                        if (goatQueueFlushTimer) {
+                            clearInterval(goatQueueFlushTimer);
+                            goatQueueFlushTimer = null;
+                        }
+                    }, 3000);
+                }
+            } catch (e) {
+                console.warn('GoatCounter event failed:', e);
+            }
+        }
+
+        // Attribute success/failure to the initiating user action (tap vs auto).
+        let pendingLoad = null; // { token: number, source: 'tap' | 'auto' | 'init' }
+        let loadSeq = 0;
+
         async function fetchRandomCat() {
             try {
-                const res = await fetch('https://api.thecatapi.com/v1/images/search');
+                const res = await fetch('https://api.thecatapi.com/v1/images/search?limit=1&size=small');
                 if (!res.ok) throw new Error(res.status);
                 const data = await res.json();
-                return data[0]?.url ?? null;
+                const url = data[0]?.url ?? null;
+                return { url, reason: url ? 'ok' : 'empty' };
             } catch (e) {
                 console.error('Error fetching cat:', e);
-                return null;
+                return { url: null, reason: 'failed' };
             }
         }
 
         function onCatImageLoad() {
             catImg.classList.add('loaded');
             catWrapper.classList.remove('loading');
+
+            const loadedToken = catImg.dataset.loadToken;
+            if (pendingLoad && String(pendingLoad.token) === loadedToken && pendingLoad.source === 'tap') {
+                trackGoatEvent('cat-image-loaded', 'Cat image loaded');
+                trackGoatEvent('cat-tap-success', 'Tap -> loaded');
+            }
+            if (pendingLoad && String(pendingLoad.token) === loadedToken) {
+                pendingLoad = null;
+            }
         }
 
-        async function loadNewCat() {
+        async function loadNewCat(source = 'init') {
             catWrapper.classList.add('loading');
             catImg.classList.remove('loaded');
-            const url = await fetchRandomCat();
-            if (url) {
-                catImg.src = url;
+
+            const token = ++loadSeq;
+            pendingLoad = { token, source };
+            catImg.dataset.loadToken = String(token);
+
+            const result = await fetchRandomCat();
+            if (result.url) {
+                catImg.src = result.url;
                 // loaded state is applied in onCatImageLoad when image finishes loading
-            } else {
-                catWrapper.classList.remove('loading');
+                return;
             }
+
+            // Failure paths: count only if this load was initiated by a user tap.
+            if (source === 'tap') {
+                if (result.reason === 'failed') {
+                    trackGoatEvent('cat-load-failed', 'Cat load failed');
+                    trackGoatEvent('cat-tap-failed', 'Tap -> failed');
+                } else if (result.reason === 'empty') {
+                    trackGoatEvent('cat-load-empty', 'Cat response empty');
+                    trackGoatEvent('cat-tap-failed', 'Tap -> empty');
+                } else {
+                    trackGoatEvent('cat-load-failed', 'Cat load failed');
+                    trackGoatEvent('cat-tap-failed', 'Tap -> failed');
+                }
+            }
+
+            catWrapper.classList.remove('loading');
+            pendingLoad = null;
         }
 
         catImg.addEventListener('load', onCatImageLoad);
@@ -163,7 +300,7 @@
 
         function startAutoRefresh() {
             stopAutoRefresh();
-            autoIntervalId = setInterval(loadNewCat, AUTO_INTERVAL_MS);
+            autoIntervalId = setInterval(() => loadNewCat('auto'), AUTO_INTERVAL_MS);
         }
 
         function stopAutoRefresh() {
@@ -186,7 +323,21 @@
         }
 
         function handleCatActivate() {
-            loadNewCat();
+            trackGoatEvent('cat-tap', 'Cat tapped');
+
+            // Unique "engaged" users: count first tap per device/browser.
+            // This helps answer "how many people tap" with a single metric.
+            try {
+                const firstTapKey = 'pablocat:first-tap-sent';
+                if (!localStorage.getItem(firstTapKey)) {
+                    localStorage.setItem(firstTapKey, '1');
+                    trackGoatEvent('cat-first-tap', 'First cat tap');
+                }
+            } catch (e) {
+                // localStorage might be blocked; don't break the UX.
+            }
+
+            loadNewCat('tap');
             scheduleResumeAutoRefresh();
         }
 
@@ -195,7 +346,7 @@
         });
 
         // Initial load, then start auto-refresh (new cat every 20s)
-        loadNewCat();
+        loadNewCat('init');
         startAutoRefresh();
 
         // Register a service worker so browsers can install as a PWA.
