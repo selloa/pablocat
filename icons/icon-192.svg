@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a1a1a"/>
+      <stop offset="1" stop-color="#ff4fd8"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="192" height="192" rx="48" fill="url(#bg)"/>
+
+  <!-- Small signature mark -->
+  <path d="M96 58 L84 80 L98 80 L88 104 L112 72 L98 72 Z" fill="#00d4ff"/>
+
+  <!-- Ears -->
+  <path d="M52 78 L70 42 L88 68 Z" fill="#5a6b5a" stroke="#00d4ff" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M140 78 L122 42 L104 68 Z" fill="#5a6b5a" stroke="#00d4ff" stroke-width="6" stroke-linejoin="round"/>
+
+  <!-- Head -->
+  <path d="M60 74 Q96 30 132 74 Q148 94 142 124 Q136 154 96 154 Q56 154 50 124 Q44 94 60 74 Z"
+        fill="#5a6b5a" stroke="#00d4ff" stroke-width="6" stroke-linejoin="round"/>
+
+  <!-- Eyes -->
+  <circle cx="78" cy="110" r="12" fill="#eaffff"/>
+  <circle cx="78" cy="110" r="5" fill="#1a1a1a"/>
+  <circle cx="114" cy="110" r="12" fill="#eaffff"/>
+  <circle cx="114" cy="110" r="5" fill="#1a1a1a"/>
+
+  <!-- Nose / mouth -->
+  <path d="M96 120 Q88 132 96 138 Q104 132 96 120 Z" fill="#00d4ff"/>
+  <path d="M88 140 Q96 150 104 140" fill="none" stroke="#eaffff" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Whiskers -->
+  <path d="M60 140 L36 132" fill="none" stroke="#00d4ff" stroke-width="6" stroke-linecap="round"/>
+  <path d="M62 152 L40 152" fill="none" stroke="#00d4ff" stroke-width="6" stroke-linecap="round"/>
+  <path d="M62 164 L44 172" fill="none" stroke="#00d4ff" stroke-width="6" stroke-linecap="round"/>
+
+  <path d="M132 140 L156 132" fill="none" stroke="#00d4ff" stroke-width="6" stroke-linecap="round"/>
+  <path d="M130 152 L152 152" fill="none" stroke="#00d4ff" stroke-width="6" stroke-linecap="round"/>
+  <path d="M130 164 L148 172" fill="none" stroke="#00d4ff" stroke-width="6" stroke-linecap="round"/>
+</svg>
+

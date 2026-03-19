@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PabloCat">
+
+    <!-- PWA install metadata -->
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icons/icon-192.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./icons/icon-192.svg" sizes="192x192">
+
+    <title>PabloCat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+        }
+        body {
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+        .cat-wrapper {
+            position: relative;
+            width: min(85vmin, 400px);
+            height: min(85vmin, 400px);
+            cursor: pointer;
+        }
+        .cat-placeholder {
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            border: 4px solid #5a6b5a;
+            background: #2a2a2a;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+        .cat-wrapper.loading .cat-placeholder {
+            opacity: 1;
+        }
+        @media (prefers-reduced-motion: no-preference) {
+            .cat-wrapper.loading .cat-placeholder {
+                animation: pulse 0.8s ease-in-out infinite;
+            }
+        }
+        @keyframes pulse {
+            50% { opacity: 0.5; }
+        }
+        .cat {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 4px solid #5a6b5a;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.5s ease;
+            opacity: 0;
+        }
+        .cat.loaded {
+            opacity: 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .cat.loaded {
+                transition: none;
+            }
+        }
+        @media (prefers-reduced-motion: no-preference) {
+            .cat:hover {
+                transform: scale(1.05) rotate(2deg);
+                box-shadow: 0 8px 24px rgba(90, 107, 90, 0.3);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cat-wrapper loading" id="cat-wrapper" role="button" title="Click for new cat">
+        <div class="cat-placeholder" aria-hidden="true"></div>
+        <img id="cat" class="cat" alt="Cat" />
+    </div>
+
+    <script>
+        const catWrapper = document.getElementById('cat-wrapper');
+        const catImg = document.getElementById('cat');
+
+        async function fetchRandomCat() {
+            try {
+                const res = await fetch('https://api.thecatapi.com/v1/images/search');
+                if (!res.ok) throw new Error(res.status);
+                const data = await res.json();
+                return data[0]?.url ?? null;
+            } catch (e) {
+                console.error('Error fetching cat:', e);
+                return null;
+            }
+        }
+
+        function onCatImageLoad() {
+            catImg.classList.add('loaded');
+            catWrapper.classList.remove('loading');
+        }
+
+        async function loadNewCat() {
+            catWrapper.classList.add('loading');
+            catImg.classList.remove('loaded');
+            const url = await fetchRandomCat();
+            if (url) {
+                catImg.src = url;
+                // loaded state is applied in onCatImageLoad when image finishes loading
+            } else {
+                catWrapper.classList.remove('loading');
+            }
+        }
+
+        catImg.addEventListener('load', onCatImageLoad);
+
+        const AUTO_INTERVAL_MS = 20000;
+        const PAUSE_AFTER_TAP_MS = 45000;
+        let autoIntervalId = null;
+        let resumeTimeoutId = null;
+
+        function startAutoRefresh() {
+            stopAutoRefresh();
+            autoIntervalId = setInterval(loadNewCat, AUTO_INTERVAL_MS);
+        }
+
+        function stopAutoRefresh() {
+            if (autoIntervalId) {
+                clearInterval(autoIntervalId);
+                autoIntervalId = null;
+            }
+            if (resumeTimeoutId) {
+                clearTimeout(resumeTimeoutId);
+                resumeTimeoutId = null;
+            }
+        }
+
+        function scheduleResumeAutoRefresh() {
+            stopAutoRefresh();
+            resumeTimeoutId = setTimeout(() => {
+                resumeTimeoutId = null;
+                startAutoRefresh();
+            }, PAUSE_AFTER_TAP_MS);
+        }
+
+        catWrapper.addEventListener('click', () => {
+            loadNewCat();
+            scheduleResumeAutoRefresh();
+        });
+
+        // Initial load, then start auto-refresh (new cat every 20s)
+        loadNewCat();
+        startAutoRefresh();
+
+        // Register a service worker so browsers can install as a PWA.
+        // Note: works on HTTPS (or localhost).
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch((e) => {
+                    console.error('Service worker registration failed:', e);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
