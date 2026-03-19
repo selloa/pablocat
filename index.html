@@ -21,9 +21,11 @@
     <meta property="og:title" content="PabloCat">
     <meta property="og:description" content="Random cats on tap — a tiny PWA.">
     <meta property="og:image" content="https://selloa.github.io/rj-pablocat/og-preview.png">
+    <meta property="og:image:secure_url" content="https://selloa.github.io/rj-pablocat/og-preview.png">
+    <meta property="og:image:alt" content="PabloCat preview image">
     <meta property="og:image:type" content="image/png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
+    <meta property="og:image:width" content="1376">
+    <meta property="og:image:height" content="768">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="PabloCat">
     <meta name="twitter:description" content="Random cats on tap — a tiny PWA.">
@@ -54,6 +56,14 @@
             width: min(85vmin, 400px);
             height: min(85vmin, 400px);
             cursor: pointer;
+            border: 0;
+            padding: 0;
+            background: transparent;
+            appearance: none;
+        }
+        .cat-wrapper:focus-visible {
+            outline: 2px solid rgba(175, 255, 175, 0.9);
+            outline-offset: 6px;
         }
         .cat-placeholder {
             position: absolute;
@@ -106,10 +116,10 @@
     </style>
 </head>
 <body>
-    <div class="cat-wrapper loading" id="cat-wrapper" role="button" title="Click for new cat">
+    <button class="cat-wrapper loading" id="cat-wrapper" type="button" title="Click for new cat">
         <div class="cat-placeholder" aria-hidden="true"></div>
         <img id="cat" class="cat" alt="Cat" />
-    </div>
+    </button>
 
     <script>
         const catWrapper = document.getElementById('cat-wrapper');
@@ -175,9 +185,13 @@
             }, PAUSE_AFTER_TAP_MS);
         }
 
-        catWrapper.addEventListener('click', () => {
+        function handleCatActivate() {
             loadNewCat();
             scheduleResumeAutoRefresh();
+        }
+
+        catWrapper.addEventListener('click', () => {
+            handleCatActivate();
         });
 
         // Initial load, then start auto-refresh (new cat every 20s)
